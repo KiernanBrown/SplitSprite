@@ -1,0 +1,22 @@
+{
+  "name": "splitsprite",
+  "version": "1.0.0",
+  "description": "Project for animating sprites using LiveSplit states",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KiernanBrown/SplitSprite.git"
+  },
+  "author": "Kiernan Brown",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KiernanBrown/SplitSprite/issues"
+  },
+  "homepage": "https://github.com/KiernanBrown/SplitSprite#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
