@@ -2,12 +2,22 @@ let splitsSocket;
 let timerState;
 let prevTimerState;
 
+let characters;
+let activeCharacter;
+
 // Open a WebSocket that works with LiveSplit
-function startSplitsSocket() {
+const startSplitsSocket = () => {
   splitsSocket = new WebSocket('ws://localhost:15721');
   splitsSocket.onopen = (event) => {
     console.dir('Connected to LiveSplit');
     console.dir(event);
+
+    // Update page
+    let connectText = document.createElement('h2');
+    connectText.textContent = `Connected to LiveSplit!`;
+    document.getElementById('content').appendChild(connectText);
+
+    initCharacters();
   };
 
   splitsSocket.onmessage = (event) => {
@@ -60,6 +70,21 @@ function startSplitsSocket() {
     };
 
   };
+};
+
+const initCharacters = () => {
+  console.dir("Fetching chars");
+  fetch('/characters')
+  .then(res => res.json())
+  .then(charactersJSON => {
+    characters = charactersJSON;
+    activeCharacter = characters[0];
+
+    // Update page
+    let charText = document.createElement('h2');
+    charText.textContent = `Character: ${activeCharacter.name}`;
+    document.getElementById('content').appendChild(charText);
+  });
 };
 
 window.onload = () => {

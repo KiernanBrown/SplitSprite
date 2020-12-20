@@ -1,0 +1,21 @@
+{
+  "name": "Sora",
+  "animations": {
+    "idle": {
+      "frameSize": {
+        "w": 39,
+        "h": 44
+      },
+      "frames": 6,
+      "fps": 9
+    }
+  },
+  "actions": {
+    "prerun": [
+      {
+        "animation": "idle",
+        "loop": true
+      }
+    ]
+  }
+}
