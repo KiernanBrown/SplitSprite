@@ -8,12 +8,26 @@
       },
       "frames": 6,
       "fps": 8
+    },
+    "dodge": {
+      "frameSize": {
+        "w": 51,
+        "h": 53
+      },
+      "frames": 7,
+      "fps": 13
     }
   },
   "actions": {
     "default": [
       {
         "animation": "idle",
+        "loop": true
+      }
+    ],
+    "ahead": [
+      {
+        "animation": "dodge",
         "loop": true
       }
     ]

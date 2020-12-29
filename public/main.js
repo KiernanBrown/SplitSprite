@@ -89,21 +89,55 @@ const initCharacters = () => {
   .then(charactersJSON => {
     characters = charactersJSON;
     setCharacter('Sora');
+    console.dir(characters);
+    console.dir(charactersJSON);
 
-    // Update page
-    let charText = document.createElement('h2');
-    charText.textContent = `Character: ${activeCharacter.name}`;
-    document.getElementById('content').appendChild(charText);
+    let loadPromises = []; // Array of promises used for loading images
 
-    // The current issue is we cannot draw using an image until that image has loaded
-    // Before adding an action, we should do a check here to make sure each spritesheet has loaded in (or just the necessary spritesheets?)
-    // For now, we can get around this by just using a timeout
+    // Load the images for each spritesheet
+    characters.forEach(char => {
+      char.images = [];
+      for (const a in char.animations) {
+        // Create a promise for loading the image and add it to the array
+        let loadPromise = loadImage(`characters/${activeCharacter.name.toLowerCase()}/${a}.png`, a);
+        loadPromises.push(loadPromise);
 
-    // Use the default action
-    setTimeout(() => {
-      addAnimations(activeCharacter.actions.default);
-    }, 6000);
-    
+        // Once the promise resolves, add the image to the character's images
+        loadPromise.then((data) => {
+          char.images.push({
+            "name": data.name,
+            "img": data.img
+          });
+        });
+      };
+
+      // Update page
+      let charText = document.createElement('h2');
+      charText.textContent = `Character: ${activeCharacter.name}`;
+      document.getElementById('content').appendChild(charText);
+
+      // Once all images have loaded, add the default animation for the active character
+      Promise.all(loadPromises).then((values) => {
+        console.dir(values);
+        addAnimations(activeCharacter.actions.default);
+        addAnimations(activeCharacter.actions.ahead);
+        addAnimations(activeCharacter.actions.default);
+      });
+    });
+  });
+};
+
+// Loads an image given a source and name
+const loadImage = (source, name) => {
+  return new Promise(resolve => {
+    // Create a new image
+    const img = new Image();
+    img.src = source;
+
+    // Resolve the promise once the image has loaded
+    img.addEventListener('load', () => {
+      resolve({name, img});
+    });
   });
 };
 
@@ -115,31 +149,14 @@ const setCharacter = (name) => {
 
   if (filteredCharacters.length > 0) {
     activeCharacter = filteredCharacters[0];
-
-    // Set images
-    characterImages = [];
-    console.dir(activeCharacter.animations);
-    for (const a in activeCharacter.animations) {
-      console.dir(a);
-      console.dir(`characters/${activeCharacter.name.toLowerCase()}/${a}.png`);
-      let img = new Image();
-      img.src = `characters/${activeCharacter.name.toLowerCase()}/${a}.png`;
-      img.onload = () => {
-        console.dir(img);
-        characterImages.push({
-          "name": a,
-          "img": img
-        });
-      }
-
-    }
   }
 };
 
+// Get a spritesheet based on the given name
 const getImage = (name) => {
-  console.dir(characterImages);
+  console.dir(activeCharacter.images);
   console.dir('Getting Image: ' + name);
-  let filteredImages = characterImages.filter(img => {
+  let filteredImages = activeCharacter.images.filter(img => {
     return img.name === name;
   });
   console.dir(filteredImages);
@@ -147,7 +164,6 @@ const getImage = (name) => {
 };
 
 const updateSprites = () => {
-  console.dir('updating');
   // Delta time
   dt = Date.now() - lastUpdate; 
   lastUpdate = Date.now();
@@ -172,6 +188,7 @@ const updateSprites = () => {
     }
   }
 
+  // Draw the new frame if this is a different frame
   if (anim.currentFrame != prevFrame) {
     ctx.clearRect(0, 0, 100, 100);
 
