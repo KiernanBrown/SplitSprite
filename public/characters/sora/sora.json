@@ -28,7 +28,7 @@
     "ahead": [
       {
         "animation": "dodge",
-        "loop": true
+        "loop": false
       }
     ]
   }

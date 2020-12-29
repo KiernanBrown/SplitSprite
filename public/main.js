@@ -121,7 +121,9 @@ const initCharacters = () => {
         console.dir(values);
         addAnimations(activeCharacter.actions.default);
         addAnimations(activeCharacter.actions.ahead);
-        addAnimations(activeCharacter.actions.default);
+        setTimeout(() => {
+          addAnimations(activeCharacter.actions.default);
+        }, 2500);
       });
     });
   });
@@ -172,6 +174,8 @@ const updateSprites = () => {
     // Get our new animation
     console.dir('changing animation');
     anim = animQueue.shift();
+    anim.currentFrame = 0;
+    console.dir(anim);
   }
 
   let prevFrame = anim.currentFrame || -1;
@@ -183,8 +187,11 @@ const updateSprites = () => {
     // Complete the animation if this was the last frame
     if (anim.currentFrame >= anim.frames) {
       anim.completed = true;
+      if (!anim.loop) {
+        requestAnimationFrame(updateSprites);
+        return;
+      } 
       anim.currentFrame = 0;
-      if (!anim.loop) return;
     }
   }
 
@@ -200,6 +207,7 @@ const updateSprites = () => {
   requestAnimationFrame(updateSprites);
 };
 
+// 
 const addAnimations = (anims) => {
   anims.forEach(a => {
     let addAnim = activeCharacter.animations[a.animation];
