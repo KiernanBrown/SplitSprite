@@ -1,6 +1,7 @@
 let splitsSocket;
 let timerState;
 let prevTimerState;
+let runReset = false;
 
 let characters;
 let activeCharacter;
@@ -42,11 +43,28 @@ const startSplitsSocket = () => {
     prevTimerState = timerState;
     timerState = data.state.timerState;
 
-    if (action === 'reset') {
-      // A run has reset
+    if (action === 'reset') { 
+      // A run has been reset
+      console.dir(prevTimerState);     
+      // Run was reset before finishing
+      if(prevTimerState === 'Running') {
+        addAnimations(activeCharacter.actions.reset);
+        runReset = true;
+      }
+
+      // Run was finished
+      if (prevTimerState === 'Ended') {
+        addAnimations(activeCharacter.actions.default);
+        runReset = false;
+      }
     }
     if (action === 'start') {
       // A run has started
+      // Give extra animations if this is a run after a failed run
+      if (runReset) {
+        addAnimations(activeCharacter.actions.retry);
+      }
+      addAnimations(activeCharacter.actions.ahead);
     } else if (action === 'split') {
       // A split has occurred
       // Get information on the split
@@ -60,6 +78,11 @@ const startSplitsSocket = () => {
       // If splitTime is < the comparison, we are ahead. Otherwise, we're behind
       // splitTime is the time on the timer when splitting, not split duration
       // Split duration can be found by taking the splitTime of the current split and subtracting the previous split's splitTime from it (if that split exists)
+      
+      // If timerState === 'Ended', run was finished
+      if (timerState === 'Ended') {
+        addAnimations(activeCharacter.actions.finish);
+      }
     } else if (action === 'switch-comparison') {
       // Update the current comparison
       // EX: Comparison changed from PB where the runner was behind to average where the runner is now ahead. Animations should change accordingly.
@@ -117,13 +140,8 @@ const initCharacters = () => {
       document.getElementById('content').appendChild(charText);
 
       // Once all images have loaded, add the default animation for the active character
-      Promise.all(loadPromises).then((values) => {
-        console.dir(values);
+      Promise.all(loadPromises).then(() => {
         addAnimations(activeCharacter.actions.default);
-        addAnimations(activeCharacter.actions.ahead);
-        setTimeout(() => {
-          addAnimations(activeCharacter.actions.default);
-        }, 2500);
       });
     });
   });
@@ -207,7 +225,7 @@ const updateSprites = () => {
   requestAnimationFrame(updateSprites);
 };
 
-// 
+// Adds animations from an action to the animation queue
 const addAnimations = (anims) => {
   anims.forEach(a => {
     let addAnim = activeCharacter.animations[a.animation];
