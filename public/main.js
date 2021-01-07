@@ -192,7 +192,10 @@ const updateSprites = () => {
     // Get our new animation
     console.dir('changing animation');
     anim = animQueue.shift();
-    anim.currentFrame = 0;
+
+    // Set the currentFrame to be the starting frame
+    // 0 if playing normally, last frame if playing in reverse
+    anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
     console.dir(anim);
   }
 
@@ -200,16 +203,19 @@ const updateSprites = () => {
   anim.frameTime += dt;
   while (anim.frameTime >= anim.fpsTime) {
     anim.frameTime -= anim.fpsTime;
-    anim.currentFrame++;
+    if (anim.reverse) {
+      anim.currentFrame--;
+    } else {
+      anim.currentFrame++;
+    }
 
     // Complete the animation if this was the last frame
-    if (anim.currentFrame >= anim.frames) {
-      anim.completed = true;
-      if (!anim.loop) {
-        requestAnimationFrame(updateSprites);
-        return;
-      } 
-      anim.currentFrame = 0;
+    if (anim.currentFrame >= anim.frames && !anim.reverse) {
+      completeAnimation(anim);
+    }
+
+    if (anim.currentFrame < 0 && anim.reverse) {
+      completeAnimation(anim);
     }
   }
 
@@ -224,6 +230,15 @@ const updateSprites = () => {
 
   requestAnimationFrame(updateSprites);
 };
+
+const completeAnimation = (anim) => {
+  anim.completed = true;
+  if (!anim.loop) {
+    requestAnimationFrame(updateSprites);
+    return;
+  } 
+  anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
+}
 
 // Adds animations from an action to the animation queue
 const addAnimations = (anims) => {
@@ -241,7 +256,8 @@ const addAnimations = (anims) => {
       "currentFrame": 0,
       "x": (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
       "y": canvas.height - addAnim.frameSize.h,
-      "loop": a.loop
+      "loop": a.loop,
+      "reverse": a.reverse
     });
   });
 };

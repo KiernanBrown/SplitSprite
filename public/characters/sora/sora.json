@@ -103,20 +103,17 @@
     ],
     "split_timesave": [
       {
-        "animation": "hit",
-        "loop": false
+        "animation": "hit"
       }
     ],
     "split_timeloss": [
       {
-        "animation": "hurt",
-        "loop": false
+        "animation": "hurt"
       }
     ],
     "reset": [
       {
-        "animation": "death",
-        "loop": false
+        "animation": "death"
       },
       {
         "animation": "deathloop",
@@ -125,12 +122,10 @@
     ],
     "retry": [
       {
-        "animation": "revive",
-        "loop": false
+        "animation": "revive"
       },
       {
-        "animation": "getup",
-        "loop": false
+        "animation": "getup"
       },
       {
         "animation": "dodge",
@@ -139,8 +134,7 @@
     ],
     "finish": [
       {
-        "animation": "finish",
-        "loop": false
+        "animation": "finish"
       },
       {
         "animation": "idle",
