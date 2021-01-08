@@ -10,7 +10,7 @@ let activeCharacter;
 
 let dt = 0;
 let lastUpdate;
-const animQueue = [];
+let animQueue = [];
 let anim = { "completed": true };
 let canvas;
 let ctx;
@@ -50,13 +50,13 @@ const startSplitsSocket = () => {
       console.dir(prevTimerState);     
       // Run was reset before finishing
       if(prevTimerState === 'Running') {
-        addAnimations(activeCharacter.actions.reset);
+        addAnimations(activeCharacter.actions.reset, 'reset');
         runReset = true;
       }
 
       // Run was finished
       if (prevTimerState === 'Ended') {
-        addAnimations(activeCharacter.actions.default);
+        addAnimations(activeCharacter.actions.default, 'default');
         runReset = false;
       }
     }
@@ -64,9 +64,9 @@ const startSplitsSocket = () => {
       // A run has started
       // Give extra animations if this is a run after a failed run
       if (runReset) {
-        addAnimations(activeCharacter.actions.retry);
+        addAnimations(activeCharacter.actions.retry, 'retry');
       }
-      addAnimations(activeCharacter.actions.ahead);
+      addAnimations(activeCharacter.actions.ahead, 'ahead');
 
       // Set comparison and timingMethod
       console.dir(data);
@@ -76,7 +76,7 @@ const startSplitsSocket = () => {
       // A split has occurred
       // If timerState === 'Ended', run was finished
       if (timerState === 'Ended') {
-        addAnimations(activeCharacter.actions.finish);
+        addAnimations(activeCharacter.actions.finish, 'finish');
       }
 
       // Get information on the split
@@ -98,6 +98,9 @@ const startSplitsSocket = () => {
 
       // Handle splits if the split exists
       if (split) {
+        // Remove animations for ahead or behind
+        removeAnimations('ahead');
+        removeAnimations('behind');
         handleSplit(split, prevSplit);
       }
     } 
@@ -147,17 +150,17 @@ const handleSplit = (split, prevSplit, splitting) => {
     // Check if we saved or lost time
     // TODO: Check for if the runner golded the split first
     if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
-      addAnimations(activeCharacter.actions.split_timesave);
+      addAnimations(activeCharacter.actions.split_timesave, 'split_timesave');
     } else {
-      addAnimations(activeCharacter.actions.split_timeloss);
+      addAnimations(activeCharacter.actions.split_timeloss, 'split_timeloss');
     }
   }
 
   // Then check if we're ahead or behind
   if (splitTime <= comparisonTime || comparisonTime <= 0) {
-    addAnimations(activeCharacter.actions.ahead);
+    addAnimations(activeCharacter.actions.ahead, 'ahead');
   } else {
-    addAnimations(activeCharacter.actions.behind);
+    addAnimations(activeCharacter.actions.behind, 'behind');
   }
 
 };
@@ -199,7 +202,7 @@ const initCharacters = () => {
 
       // Once all images have loaded, add the default animation for the active character
       Promise.all(loadPromises).then(() => {
-        addAnimations(activeCharacter.actions.default);
+        addAnimations(activeCharacter.actions.default, 'default');
       });
     });
   });
@@ -297,10 +300,10 @@ const completeAnimation = (anim) => {
     return;
   } 
   anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
-}
+};
 
 // Adds animations from an action to the animation queue
-const addAnimations = (anims) => {
+const addAnimations = (anims, action) => {
   anims.forEach(a => {
     let addAnim = activeCharacter.animations[a.animation];
     console.dir(`characters/${activeCharacter.name.toLowerCase()}/${a.animation}.png`);
@@ -313,12 +316,21 @@ const addAnimations = (anims) => {
       "fpsTime": 1000 / addAnim.fps,
       "frameTime": 0,
       "currentFrame": 0,
+      "action": action,
       "x": addAnim.offset ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
       "y": addAnim.offset ? canvas.height - addAnim.frameSize.h + addAnim.offset.y : canvas.height - addAnim.frameSize.h,
       "loop": a.loop,
       "reverse": a.reverse
     });
   });
+};
+
+// Remove animations from the animation queue that have the matching action
+// This does not affect the current animation, only queued animations
+const removeAnimations = (action) => {
+ animQueue = animQueue.filter(anim => {
+  return anim.action != action;
+ });
 };
 
 // Connect to LiveSplit when the window loads
