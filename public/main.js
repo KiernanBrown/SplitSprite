@@ -2,6 +2,8 @@ let splitsSocket;
 let timerState;
 let prevTimerState;
 let runReset = false;
+let comparison;
+let timingMethod;
 
 let characters;
 let activeCharacter;
@@ -65,28 +67,40 @@ const startSplitsSocket = () => {
         addAnimations(activeCharacter.actions.retry);
       }
       addAnimations(activeCharacter.actions.ahead);
+
+      // Set comparison and timingMethod
+      console.dir(data);
+      comparison = data.state.currentComparison;
+      timingMethod = data.state.currentTimingMethod === 'RealTime' ? 'realTime' : 'gameTime';
     } else if (action === 'split') {
       // A split has occurred
-      // Get information on the split
-      console.dir(data);
-      split = data.state.run.segments[data.state.currentSplitIndex - 1];
-      console.dir(split);
-
-      // Information on if we are ahead or behind can be gotten as follows:
-      // Get the current comparison from split.comparisons
-      // Compare the current timing method (realTime or gameTime) to the split.splitTime 
-      // If splitTime is < the comparison, we are ahead. Otherwise, we're behind
-      // splitTime is the time on the timer when splitting, not split duration
-      // Split duration can be found by taking the splitTime of the current split and subtracting the previous split's splitTime from it (if that split exists)
-      
       // If timerState === 'Ended', run was finished
       if (timerState === 'Ended') {
         addAnimations(activeCharacter.actions.finish);
       }
+
+      // Get information on the split
+      console.dir(data);
+      const split = data.state.run.segments[data.state.currentSplitIndex - 1];
+      const prevSplit = data.state.currentSplitIndex > 1 ? data.state.run.segments[data.state.currentSplitIndex - 2] : undefined;
+
+      handleSplit(split, prevSplit, true);
     } else if (action === 'switch-comparison') {
       // Update the current comparison
+      comparison = data.state.currentComparison;
+
+      // Get information about the current split with the new comparison
+      // This information only exists if the runner has split this run
       // EX: Comparison changed from PB where the runner was behind to average where the runner is now ahead. Animations should change accordingly.
-    }
+      console.dir(data);
+      const split = data.state.run.segments[data.state.currentSplitIndex - 1];
+      const prevSplit = data.state.currentSplitIndex > 1 ? data.state.run.segments[data.state.currentSplitIndex - 2] : undefined;
+
+      // Handle splits if the split exists
+      if (split) {
+        handleSplit(split, prevSplit);
+      }
+    } 
 
     // Attempt to reconnect if the socket is closed
     splitsSocket.onclose = (e) => {
@@ -102,6 +116,50 @@ const startSplitsSocket = () => {
     };
 
   };
+};
+
+// Handles animations given the current and previous split
+const handleSplit = (split, prevSplit, splitting) => {
+  console.dir(split);
+  console.dir(prevSplit);
+
+  const splitTime = split.splitTime[timingMethod];
+  const comparisonTime = split.comparisons[comparison][timingMethod];
+  console.dir(comparisonTime);
+
+  // First check split duration to see if time was saved or lost
+  // This only happens if the runner just split (not on comparison switch)
+  if (splitting) {
+    // Get the splitTime of the previous split (if it exists)
+    let prevSplitTime = 0;
+    let prevComparisonTime = 0;
+    if (prevSplit) {
+      prevSplitTime = prevSplit.splitTime[timingMethod];
+      prevComparisonTime = prevSplit.comparisons[comparison][timingMethod];
+    }
+
+    // Get the duration of the current split and comparison
+    let splitDuration = splitTime - prevSplitTime;
+    let comparisonDuration = comparisonTime - prevComparisonTime;
+    console.dir(splitDuration);
+    console.dir(comparisonDuration);
+
+    // Check if we saved or lost time
+    // TODO: Check for if the runner golded the split first
+    if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
+      addAnimations(activeCharacter.actions.split_timesave);
+    } else {
+      addAnimations(activeCharacter.actions.split_timeloss);
+    }
+  }
+
+  // Then check if we're ahead or behind
+  if (splitTime <= comparisonTime || comparisonTime <= 0) {
+    addAnimations(activeCharacter.actions.ahead);
+  } else {
+    addAnimations(activeCharacter.actions.behind);
+  }
+
 };
 
 // Initializes the characters array with characters from the server
@@ -231,6 +289,7 @@ const updateSprites = () => {
   requestAnimationFrame(updateSprites);
 };
 
+// Completes the specified animation (and loops it if needed)
 const completeAnimation = (anim) => {
   anim.completed = true;
   if (!anim.loop) {
