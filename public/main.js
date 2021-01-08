@@ -313,8 +313,8 @@ const addAnimations = (anims) => {
       "fpsTime": 1000 / addAnim.fps,
       "frameTime": 0,
       "currentFrame": 0,
-      "x": (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
-      "y": canvas.height - addAnim.frameSize.h,
+      "x": addAnim.offset ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
+      "y": addAnim.offset ? canvas.height - addAnim.frameSize.h + addAnim.offset.y : canvas.height - addAnim.frameSize.h,
       "loop": a.loop,
       "reverse": a.reverse
     });
