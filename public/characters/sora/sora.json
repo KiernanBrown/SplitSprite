@@ -80,6 +80,58 @@
       },
       "frames": 7,
       "fps": 11
+    },
+    "gold_start": {
+      "frameSize": {
+        "w": 48,
+        "h": 88
+      },
+      "offset": {
+        "x": 2,
+        "y": 0
+      },
+      "frames": 2,
+      "fps": 11
+    },
+    "gold_sparkle": {
+      "frameSize": {
+        "w": 62,
+        "h": 110
+      },
+      "frames": 7,
+      "fps": 18
+    },
+    "gold_flip": {
+      "frameSize": {
+        "w": 80,
+        "h": 80
+      },
+      "frames": 5,
+      "fps": 13
+    },
+    "gold_spin": {
+      "frameSize": {
+        "w": 88,
+        "h": 87
+      },
+      "offset": {
+        "x": 23,
+        "y": 0
+      },
+      "frames": 9,
+      "fps": 8
+    },
+    "gold_end": {
+      "frameSize": {
+        "w": 42,
+        "h": 52
+      },
+      "offset": {
+        "x": 11,
+        "y": 3
+      },
+      "frames": 6,
+      "fps": 11
     }
   },
   "actions": {
@@ -109,6 +161,23 @@
     "split_timeloss": [
       {
         "animation": "hurt"
+      }
+    ],
+    "split_gold": [
+      {
+        "animation": "gold_start"
+      },
+      {
+        "animation": "gold_sparkle"
+      },
+      {
+        "animation": "gold_flip"
+      },
+      {
+        "animation": "gold_spin"
+      },
+      {
+        "animation": "gold_end"
       }
     ],
     "reset": [

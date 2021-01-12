@@ -15,6 +15,8 @@ let anim = { "completed": true };
 let canvas;
 let ctx;
 
+let canvasPadding = 10;
+
 let characterImages = [];
 
 // Open a WebSocket that works with LiveSplit
@@ -148,10 +150,15 @@ const handleSplit = (split, prevSplit, splitting) => {
     console.dir(comparisonDuration);
 
     // Check if we saved or lost time
-    // TODO: Check for if the runner golded the split first
-    if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
+    console.dir(split.bestSegment[timingMethod]);
+    if (!split.bestSegment[timingMethod] || splitDuration <= split.bestSegment[timingMethod]) {
+      // Gold Split
+      addAnimations(activeCharacter.actions.split_gold, 'split_gold');
+    } else if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
+      // Split that saved time
       addAnimations(activeCharacter.actions.split_timesave, 'split_timesave');
     } else {
+      // Split that lost time
       addAnimations(activeCharacter.actions.split_timeloss, 'split_timeloss');
     }
   }
@@ -282,7 +289,7 @@ const updateSprites = () => {
 
   // Draw the new frame if this is a different frame
   if (anim.currentFrame != prevFrame) {
-    ctx.clearRect(0, 0, 100, 100);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (anim.hasOwnProperty('source')) {
       ctx.drawImage(anim.source.img, anim.currentFrame * anim.frameSize.w, 0, anim.frameSize.w, anim.frameSize.h, anim.x, anim.y, anim.frameSize.w, anim.frameSize.h);
@@ -318,7 +325,7 @@ const addAnimations = (anims, action) => {
       "currentFrame": 0,
       "action": action,
       "x": addAnim.offset ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
-      "y": addAnim.offset ? canvas.height - addAnim.frameSize.h + addAnim.offset.y : canvas.height - addAnim.frameSize.h,
+      "y": addAnim.offset ? canvas.height - canvasPadding - addAnim.frameSize.h + addAnim.offset.y : canvas.height - canvasPadding - addAnim.frameSize.h,
       "loop": a.loop,
       "reverse": a.reverse
     });
