@@ -1,8 +1,13 @@
 const express = require("express");
 const app = express();
 const server = require('http').createServer(app);
-const port = process.env.PORT || process.env.NODE_PORT || 3000;
+const port = require('./config.json').port || process.env.PORT || process.env.NODE_PORT || 3000;
 const fs = require('fs');
+
+const {
+  canvasSize,
+  canvasPadding
+} = require('./config.json');
 
 let characters = [];
 
@@ -36,6 +41,13 @@ app.get('/', (req, res) => {
 app.get('/characters', (req, res) => {
   res.json(characters);
 });
+
+app.get('/canvas', (req, res) => {
+  res.json({
+    canvasSize,
+    canvasPadding
+  });
+})
 
 server.listen(port, () => {
   console.log(`Listening on ${port}`);

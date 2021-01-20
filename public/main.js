@@ -15,7 +15,7 @@ let anim = { "completed": true };
 let canvas;
 let ctx;
 
-let canvasPadding = 10;
+let canvasPadding = 0;
 
 let characterImages = [];
 
@@ -340,10 +340,23 @@ const removeAnimations = (action) => {
  });
 };
 
-// Connect to LiveSplit when the window loads
-window.onload = () => {
+const initCanvas = () => {
   canvas = document.getElementById('spriteCanvas');
   ctx = canvas.getContext('2d');
+
+  fetch('/canvas')
+  .then(res => res.json())
+  .then(canvasJSON => {
+    canvasPadding = canvasJSON.canvasPadding;
+    canvas.width = canvasJSON.canvasSize.w;
+    canvas.height = canvasJSON.canvasSize.h + canvasPadding * 2;
+  });
+};
+
+// Connect to LiveSplit when the window loads
+window.onload = () => {
+
+  initCanvas();
 
   startSplitsSocket();
   lastUpdate = Date.now();
