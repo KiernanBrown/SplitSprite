@@ -1,0 +1,112 @@
+{
+  "name": "FW_Sora",
+  "animations": {
+    "dodge": {
+      "frameSize": {
+        "w": 51,
+        "h": 53
+      },
+      "frames": 7,
+      "fps": 13
+    },
+    "walk": {
+      "frameSize": {
+        "w": 47,
+        "h": 45
+      },
+      "frames": 8,
+      "fps": 11
+    },
+    "death": {
+      "frameSize": {
+        "w": 55,
+        "h": 45
+      },
+      "frames": 8,
+      "fps": 11
+    },
+    "deathloop": {
+      "frameSize": {
+        "w": 55,
+        "h": 45
+      },
+      "frames": 8,
+      "fps": 10
+    },
+    "revive": {
+      "frameSize": {
+        "w": 55,
+        "h": 45
+      },
+      "frames": 3,
+      "fps": 10
+    },
+    "getup": {
+      "frameSize": {
+        "w": 51,
+        "h": 53
+      },
+      "frames": 3,
+      "fps": 9
+    },
+    "switchLich": {
+      "frameSize": {
+        "w": 44,
+        "h": 80
+      },
+      "frames": 7,
+      "fps": 11
+    }
+  },
+  "actions": {
+    "default": [
+      {
+        "animation": "walk",
+        "loop": true
+      }
+    ],
+    "ahead": [
+      {
+        "animation": "dodge",
+        "loop": true
+      }
+    ],
+    "behind": [
+      {
+        "animation": "walk",
+        "loop": true
+      }
+    ],
+    "reset": [
+      {
+        "animation": "death"
+      },
+      {
+        "animation": "deathloop",
+        "loop": true
+      }
+    ],
+    "retry": [
+      {
+        "animation": "revive"
+      },
+      {
+        "animation": "getup"
+      },
+      {
+        "animation": "dodge",
+        "loop": true
+      }
+    ],
+    "switch_fw": [
+      {
+        "animation": "getup"
+      }
+    ],
+    "switch_start": [
+      {
+        "animation": "revive"
+      }
+    ]
+  }
+}

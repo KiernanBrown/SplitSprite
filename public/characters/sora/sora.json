@@ -132,6 +132,14 @@
       },
       "frames": 6,
       "fps": 11
+    },
+    "switchFW": {
+      "frameSize": {
+        "w": 55,
+        "h": 45
+      },
+      "frames": 8,
+      "fps": 11
     }
   },
   "actions": {
@@ -207,6 +215,20 @@
       },
       {
         "animation": "idle",
+        "loop": true
+      }
+    ],
+    "switch_fw": [
+      {
+        "animation": "switchFW"
+      }
+    ],
+    "switch_start": [
+      {
+        "animation": "getup"
+      },
+      {
+        "animation": "dodge",
         "loop": true
       }
     ]

@@ -68,6 +68,14 @@ const startSplitsSocket = () => {
       if (runReset) {
         addAnimations(activeCharacter.actions.retry, 'retry');
       }
+      switchCharacter(    {
+        "splitName": "Sora Collection",
+        "switchCharacter": "FW_Sora",
+        "conditionalCharacters": ["Sora"],
+        "switchOut": "switch_fw",
+        "switchIn": "switch_fw",
+        "override": true
+      });
       addAnimations(activeCharacter.actions.ahead, 'ahead');
 
       // Set comparison and timingMethod
@@ -190,7 +198,7 @@ const initCharacters = () => {
       char.images = [];
       for (const a in char.animations) {
         // Create a promise for loading the image and add it to the array
-        let loadPromise = loadImage(`characters/${activeCharacter.name.toLowerCase()}/${a}.png`, a);
+        let loadPromise = loadImage(`characters/${char.name.toLowerCase()}/${a}.png`, a);
         loadPromises.push(loadPromise);
 
         // Once the promise resolves, add the image to the character's images
@@ -201,16 +209,16 @@ const initCharacters = () => {
           });
         });
       };
+    });
 
-      // Update page
-      let charText = document.createElement('h2');
-      charText.textContent = `Character: ${activeCharacter.name}`;
-      document.getElementById('content').appendChild(charText);
+    // Update page
+    let charText = document.createElement('h2');
+    charText.textContent = `Character: ${activeCharacter.name}`;
+    document.getElementById('content').appendChild(charText);
 
-      // Once all images have loaded, add the default animation for the active character
-      Promise.all(loadPromises).then(() => {
-        addAnimations(activeCharacter.actions.default, 'default');
-      });
+    // Once all images have loaded, add the default animation for the active character
+    Promise.all(loadPromises).then(() => {
+      addAnimations(activeCharacter.actions.default, 'default');
     });
   });
 };
@@ -311,6 +319,8 @@ const completeAnimation = (anim) => {
 
 // Adds animations from an action to the animation queue
 const addAnimations = (anims, action) => {
+  console.dir(anims);
+  console.dir(action);
   anims.forEach(a => {
     let addAnim = activeCharacter.animations[a.animation];
     console.dir(`characters/${activeCharacter.name.toLowerCase()}/${a.animation}.png`);
@@ -340,6 +350,20 @@ const removeAnimations = (action) => {
  });
 };
 
+// Switches the active character
+const switchCharacter = (charSwitch) => {
+  if (!charSwitch.conditionalCharacters || charSwitch.conditionalCharacters.includes(activeCharacter.name)) {
+    if (charSwitch.switchOut) {
+      addAnimations(activeCharacter.actions[charSwitch.switchOut], "switch");
+    }
+    setCharacter(charSwitch.switchCharacter);
+    if (charSwitch.switchIn) {
+      addAnimations(activeCharacter.actions[charSwitch.switchIn], "switch");
+    }
+  }
+};
+
+// Initializes the canvas
 const initCanvas = () => {
   canvas = document.getElementById('spriteCanvas');
   ctx = canvas.getContext('2d');
