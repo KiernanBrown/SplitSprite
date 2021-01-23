@@ -1,0 +1,27 @@
+{
+  "name": "KH3",
+  "defaultCharacter": "Sora",
+  "characterSwitches": [
+    {
+      "splitName": "Sora Collection",
+      "switchCharacter": "FW_Sora",
+      "switchOut": "switch_fw",
+      "switchIn": "switch_fw",
+      "override": true
+    },
+    {
+      "splitName": "Liches",
+      "switchCharacter": "Sora",
+      "switchOut": "switch_lich",
+      "override": true
+    },
+    {
+      "action": "start",
+      "switchCharacter": "Sora",
+      "conditionalCharacters": ["FW_Sora"],
+      "switchOut": "switch_start",
+      "switchIn": "switch_start",
+      "override": true
+    }
+  ]
+}

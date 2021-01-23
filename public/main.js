@@ -7,6 +7,8 @@ let timingMethod;
 
 let characters;
 let activeCharacter;
+let runs;
+let activeRun;
 
 let dt = 0;
 let lastUpdate;
@@ -187,7 +189,6 @@ const initCharacters = () => {
   .then(res => res.json())
   .then(charactersJSON => {
     characters = charactersJSON;
-    setCharacter('Sora');
     console.dir(characters);
     console.dir(charactersJSON);
 
@@ -211,14 +212,9 @@ const initCharacters = () => {
       };
     });
 
-    // Update page
-    let charText = document.createElement('h2');
-    charText.textContent = `Character: ${activeCharacter.name}`;
-    document.getElementById('content').appendChild(charText);
-
     // Once all images have loaded, add the default animation for the active character
     Promise.all(loadPromises).then(() => {
-      addAnimations(activeCharacter.actions.default, 'default');
+      initRuns();
     });
   });
 };
@@ -240,7 +236,7 @@ const loadImage = (source, name) => {
 // Sets the activeCharacter to the character specified
 const setCharacter = (name) => {
   let filteredCharacters = characters.filter(c => {
-    return c.name === name;
+    return c.name.toLowerCase() === name.toLowerCase()
   });
 
   if (filteredCharacters.length > 0) {
@@ -375,6 +371,29 @@ const initCanvas = () => {
     canvas.width = canvasJSON.canvasSize.w;
     canvas.height = canvasJSON.canvasSize.h + canvasPadding * 2;
   });
+};
+
+const initRuns = () => {
+  fetch('/runs')
+  .then(res => res.json())
+  .then(runsJSON => { 
+    runs = runsJSON.runs;
+    console.dir(runsJSON);
+    console.dir(runs);
+    setRun(runsJSON.defaultRun);
+    addAnimations(activeCharacter.actions.default, 'default');
+  });
+};
+
+const setRun = (name) => {
+  let filteredRuns = runs.filter(r => {
+    return r.name.toLowerCase() === name.toLowerCase();
+  });
+
+  if (filteredRuns.length > 0) {
+    activeRun = filteredRuns[0];
+    setCharacter(activeRun.defaultCharacter);
+  }
 };
 
 // Connect to LiveSplit when the window loads

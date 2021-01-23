@@ -6,10 +6,12 @@ const fs = require('fs');
 
 const {
   canvasSize,
-  canvasPadding
+  canvasPadding,
+  defaultRun
 } = require('./config.json');
 
 let characters = [];
+let runs = [];
 
 const loadCharacters = () => {
   const dirName = 'public/characters/';
@@ -32,6 +34,27 @@ const loadCharacters = () => {
   });
 };
 
+const loadFiles = (dirName, fileArr, subFolder) => {
+  fs.readdir(dirName, (err, filenames) => {
+    if (err) {
+      console.dir(err);
+      return;
+    }
+
+    filenames.forEach((file) => {
+      let fileStr = subFolder ? dirName + file + `/${file}.json` : dirName + file;
+      fs.readFile(fileStr, (err, content) => {
+        if (err) {
+          console.dir(err);
+          return;
+        }
+        // Parse the JSON file and add it to the characters array
+        fileArr.push(JSON.parse(content));
+      });
+    });
+  });
+}
+
 app.use(express.static("public"));
 
 app.get('/', (req, res) => {
@@ -40,6 +63,13 @@ app.get('/', (req, res) => {
 
 app.get('/characters', (req, res) => {
   res.json(characters);
+});
+
+app.get('/runs', (req, res) => {
+  res.json({
+    runs,
+    defaultRun
+  });
 });
 
 app.get('/canvas', (req, res) => {
@@ -51,5 +81,6 @@ app.get('/canvas', (req, res) => {
 
 server.listen(port, () => {
   console.log(`Listening on ${port}`);
-  loadCharacters();
+  loadFiles('public/characters/', characters, true);
+  loadFiles('public/runs/', runs);
 });
