@@ -7,6 +7,7 @@ let timingMethod;
 
 let characters;
 let activeCharacter;
+let previousCharacter;
 let runs;
 let activeRun;
 let currentSwitch;
@@ -278,6 +279,7 @@ const setCharacter = (name) => {
   });
 
   if (filteredCharacters.length > 0) {
+    previousCharacter = activeCharacter;
     activeCharacter = filteredCharacters[0];
   }
 };
@@ -393,7 +395,19 @@ const switchCharacter = (charSwitch) => {
       console.dir(charSwitch.switchOut);
       addAnimations(activeCharacter.actions[charSwitch.switchOut], "switch");
     }
-    setCharacter(charSwitch.switchCharacter);
+    switch (charSwitch.switchCharacter.toLowerCase()) {
+      case "$defaultcharacter" : 
+        setCharacter(activeRun.defaultCharacter);
+        break;
+      case "$previouscharacter":
+        if (previousCharacter) {
+          setCharacter(previousCharacter);
+        }
+        break;
+      default:
+        setCharacter(charSwitch.switchCharacter);
+    }
+
     if (charSwitch.switchIn) {
       console.dir('Switching In!');
       console.dir(activeCharacter.actions);
