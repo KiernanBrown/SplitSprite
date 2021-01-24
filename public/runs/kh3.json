@@ -3,14 +3,16 @@
   "defaultCharacter": "Sora",
   "characterSwitches": [
     {
-      "splitName": "Sora Collection",
+      "action": "split",
+      "splitName": "-Mech Fight",
       "switchCharacter": "FW_Sora",
       "switchOut": "switch_fw",
       "switchIn": "switch_fw",
       "override": true
     },
     {
-      "splitName": "Liches",
+      "action": "split",
+      "splitName": "-Dragon Fight",
       "switchCharacter": "Sora",
       "switchOut": "switch_lich",
       "override": true

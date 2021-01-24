@@ -107,6 +107,11 @@
       {
         "animation": "revive"
       }
+    ],
+    "switch_lich": [
+      {
+        "animation": "switchLich"
+      }
     ]
   }
 }

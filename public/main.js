@@ -9,6 +9,7 @@ let characters;
 let activeCharacter;
 let runs;
 let activeRun;
+let currentSwitch;
 
 let dt = 0;
 let lastUpdate;
@@ -54,7 +55,20 @@ const startSplitsSocket = () => {
       console.dir(prevTimerState);     
       // Run was reset before finishing
       if(prevTimerState === 'Running') {
-        addAnimations(activeCharacter.actions.reset, 'reset');
+        let charSwitches = filterSwitches({
+          action: 'reset'
+        });
+        currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+  
+        // Override the default animations if needed
+        if(!currentSwitch|| !currentSwitch.override) {
+          addAnimations(activeCharacter.actions.reset, 'reset');
+        }
+
+        if (currentSwitch) {
+          switchCharacter(currentSwitch);
+        }
+
         runReset = true;
       }
 
@@ -64,21 +78,27 @@ const startSplitsSocket = () => {
         runReset = false;
       }
     }
-    if (action === 'start') {
+    else if (action === 'start') {
       // A run has started
-      // Give extra animations if this is a run after a failed run
-      if (runReset) {
-        addAnimations(activeCharacter.actions.retry, 'retry');
-      }
-      switchCharacter(    {
-        "splitName": "Sora Collection",
-        "switchCharacter": "FW_Sora",
-        "conditionalCharacters": ["Sora"],
-        "switchOut": "switch_fw",
-        "switchIn": "switch_fw",
-        "override": true
+      // Get any character switches for starting the run
+      let charSwitches = filterSwitches({
+        action: 'start'
       });
-      addAnimations(activeCharacter.actions.ahead, 'ahead');
+      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+
+      // Override the default animations if needed
+      if(!currentSwitch|| !currentSwitch.override) {
+        // Give extra animations if this is a run after a failed run
+        if (runReset) {
+          addAnimations(activeCharacter.actions.retry, 'retry');
+        }
+        addAnimations(activeCharacter.actions.ahead, 'ahead');
+      }
+
+      // Switch characters if needed
+      if (currentSwitch) {
+        switchCharacter(currentSwitch);
+      }
 
       // Set comparison and timingMethod
       console.dir(data);
@@ -86,17 +106,34 @@ const startSplitsSocket = () => {
       timingMethod = data.state.currentTimingMethod === 'RealTime' ? 'realTime' : 'gameTime';
     } else if (action === 'split') {
       // A split has occurred
-      // If timerState === 'Ended', run was finished
-      if (timerState === 'Ended') {
-        addAnimations(activeCharacter.actions.finish, 'finish');
-      }
-
       // Get information on the split
       console.dir(data);
       const split = data.state.run.segments[data.state.currentSplitIndex - 1];
       const prevSplit = data.state.currentSplitIndex > 1 ? data.state.run.segments[data.state.currentSplitIndex - 2] : undefined;
 
-      handleSplit(split, prevSplit, true);
+      // Get any character switches for this split
+      let charSwitches = filterSwitches({
+        action: 'split',
+        splitName: split.name,
+        splitIndex: data.state.currentSplitIndex - 1
+      });
+      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+
+      // Override the default animations if needed
+      if(!currentSwitch|| !currentSwitch.override) {
+        // If timerState === 'Ended', run was finished
+        if (timerState === 'Ended') {
+          addAnimations(activeCharacter.actions.finish, 'finish');
+        } else {
+          handleSplit(split, prevSplit, true);
+        }
+      }
+
+      // Switch characters if needed
+      if (currentSwitch) {
+        switchCharacter(currentSwitch);
+        handleSplit(split, prevSplit, true, true);
+      }
     } else if (action === 'switch-comparison') {
       // Update the current comparison
       comparison = data.state.currentComparison;
@@ -134,7 +171,7 @@ const startSplitsSocket = () => {
 };
 
 // Handles animations given the current and previous split
-const handleSplit = (split, prevSplit, splitting) => {
+const handleSplit = (split, prevSplit, splitting, overriding) => {
   console.dir(split);
   console.dir(prevSplit);
 
@@ -160,16 +197,18 @@ const handleSplit = (split, prevSplit, splitting) => {
     console.dir(comparisonDuration);
 
     // Check if we saved or lost time
-    console.dir(split.bestSegment[timingMethod]);
-    if (!split.bestSegment[timingMethod] || splitDuration <= split.bestSegment[timingMethod]) {
-      // Gold Split
-      addAnimations(activeCharacter.actions.split_gold, 'split_gold');
-    } else if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
-      // Split that saved time
-      addAnimations(activeCharacter.actions.split_timesave, 'split_timesave');
-    } else {
-      // Split that lost time
-      addAnimations(activeCharacter.actions.split_timeloss, 'split_timeloss');
+    if (!overriding) {
+      console.dir(split.bestSegment[timingMethod]);
+      if (!split.bestSegment[timingMethod] || splitDuration <= split.bestSegment[timingMethod]) {
+        // Gold Split
+        addAnimations(activeCharacter.actions.split_gold, 'split_gold');
+      } else if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
+        // Split that saved time
+        addAnimations(activeCharacter.actions.split_timesave, 'split_timesave');
+      } else {
+        // Split that lost time
+        addAnimations(activeCharacter.actions.split_timeloss, 'split_timeloss');
+      }
     }
   }
 
@@ -179,7 +218,6 @@ const handleSplit = (split, prevSplit, splitting) => {
   } else {
     addAnimations(activeCharacter.actions.behind, 'behind');
   }
-
 };
 
 // Initializes the characters array with characters from the server
@@ -348,12 +386,17 @@ const removeAnimations = (action) => {
 
 // Switches the active character
 const switchCharacter = (charSwitch) => {
-  if (!charSwitch.conditionalCharacters || charSwitch.conditionalCharacters.includes(activeCharacter.name)) {
+  if (!charSwitch.hasOwnProperty('conditionalCharacters') || charSwitch.conditionalCharacters.includes(activeCharacter.name)) {
     if (charSwitch.switchOut) {
+      console.dir('Switching Out!');
+      console.dir(activeCharacter.actions);
+      console.dir(charSwitch.switchOut);
       addAnimations(activeCharacter.actions[charSwitch.switchOut], "switch");
     }
     setCharacter(charSwitch.switchCharacter);
     if (charSwitch.switchIn) {
+      console.dir('Switching In!');
+      console.dir(activeCharacter.actions);
       addAnimations(activeCharacter.actions[charSwitch.switchIn], "switch");
     }
   }
@@ -394,6 +437,37 @@ const setRun = (name) => {
     activeRun = filteredRuns[0];
     setCharacter(activeRun.defaultCharacter);
   }
+};
+
+const filterSwitches = (criteria) => {
+  let validSwitches = activeRun.characterSwitches;
+  console.dir(validSwitches);
+
+  if (criteria.action) {
+    validSwitches = validSwitches.filter(charSwitch => {
+      return charSwitch.action === criteria.action;
+    });
+    console.dir(validSwitches);
+  }
+
+  console.dir(criteria.splitIndex);
+  if (criteria.hasOwnProperty('splitName') && criteria.hasOwnProperty('splitIndex')) {
+    validSwitches = validSwitches.filter(charSwitch => {
+      return charSwitch.splitName.toLowerCase() === criteria.splitName.toLowerCase() || charSwitch.splitIndex === criteria.splitIndex;
+    });
+    console.dir(validSwitches);
+  }
+
+  validSwitches = validSwitches.filter(charSwitch => {
+    if (charSwitch.hasOwnProperty('conditionalCharacters')) {
+      return charSwitch.conditionalCharacters.includes(activeCharacter.name);
+    } else {
+      return true;
+    }
+  });
+  console.dir(validSwitches);
+  
+  return validSwitches;
 };
 
 // Connect to LiveSplit when the window loads
