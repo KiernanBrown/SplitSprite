@@ -25,13 +25,29 @@
       "frames": 8,
       "fps": 11
     },
-    "hit": {
+    "hit1": {
+      "frameSize": {
+        "w": 76,
+        "h": 47
+      },
+      "frames": 5,
+      "fps": 13
+    },
+    "hit2": {
       "frameSize": {
         "w": 70,
         "h": 60
       },
       "frames": 5,
       "fps": 12
+    },
+    "hit3": {
+      "frameSize": {
+        "w": 72,
+        "h": 45
+      },
+      "frames": 8,
+      "fps": 11
     },
     "hurt": {
       "frameSize": {
@@ -163,7 +179,13 @@
     ],
     "split_timesave": [
       {
-        "animation": "hit"
+        "animation": "hit1"
+      },
+      {
+        "animation": "hit2"
+      },
+      {
+        "animation": "hit3"
       }
     ],
     "split_timeloss": [
