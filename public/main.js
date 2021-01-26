@@ -291,6 +291,7 @@ const updateSprites = () => {
   lastUpdate = Date.now();
 
   if (anim.completed && animQueue.length > 0) {
+    if (anim.interruptable || (anim.currentFrame >= anim.frames && !anim.reverse) || (anim.currentFrame < 0 && anim.reverse)) {
     // Get our new animation
     console.dir('changing animation');
     anim = animQueue.shift();
@@ -299,6 +300,7 @@ const updateSprites = () => {
     // 0 if playing normally, last frame if playing in reverse
     anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
     console.dir(anim);
+    }
   }
 
   let prevFrame = anim.currentFrame || -1;
