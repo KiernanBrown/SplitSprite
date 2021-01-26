@@ -4,7 +4,7 @@
   "characterSwitches": [
     {
       "action": "split",
-      "splitName": "Sora Collection",
+      "splitName": "10K",
       "switchCharacter": "FW_Sora",
       "switchOut": "switch_fw",
       "switchIn": "switch_fw",
@@ -12,7 +12,7 @@
     },
     {
       "action": "split",
-      "splitName": "Liches",
+      "splitName": "Sora Collection",
       "switchCharacter": "Sora",
       "switchOut": "switch_lich",
       "override": true

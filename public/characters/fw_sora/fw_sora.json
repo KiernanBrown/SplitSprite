@@ -3,7 +3,7 @@
   "animations": {
     "dodge": {
       "frameSize": {
-        "w": 51,
+        "w": 53,
         "h": 53
       },
       "frames": 7,
@@ -51,7 +51,7 @@
     },
     "switchLich": {
       "frameSize": {
-        "w": 44,
+        "w": 45,
         "h": 80
       },
       "frames": 7,

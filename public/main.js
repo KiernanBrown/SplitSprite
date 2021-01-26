@@ -16,7 +16,7 @@ let currentSwitch;
 let dt = 0;
 let lastUpdate;
 let animQueue = [];
-let anim = { "completed": true };
+let anim = { "interruptable": true, "completed": true };
 let canvas;
 let ctx;
 
@@ -290,17 +290,9 @@ const updateSprites = () => {
   dt = Date.now() - lastUpdate; 
   lastUpdate = Date.now();
 
-  if (anim.completed && animQueue.length > 0) {
-    if (anim.interruptable || (anim.currentFrame >= anim.frames && !anim.reverse) || (anim.currentFrame < 0 && anim.reverse)) {
-    // Get our new animation
-    console.dir('changing animation');
-    anim = animQueue.shift();
-
-    // Set the currentFrame to be the starting frame
-    // 0 if playing normally, last frame if playing in reverse
-    anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
-    console.dir(anim);
-    }
+  if (anim.completed && animQueue.length > 0 && anim.interruptable) {
+    console.dir('first change anim');
+    changeAnimation();
   }
 
   let prevFrame = anim.currentFrame || -1;
@@ -328,7 +320,7 @@ const updateSprites = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (anim.hasOwnProperty('source')) {
-      ctx.drawImage(anim.source.img, anim.currentFrame * anim.frameSize.w, 0, anim.frameSize.w, anim.frameSize.h, anim.x, anim.y, anim.frameSize.w, anim.frameSize.h);
+      ctx.drawImage(anim.source.img, anim.currentFrame * anim.frameSize.w + anim.padding * anim.currentFrame, 0, anim.frameSize.w, anim.frameSize.h, anim.x, anim.y, anim.frameSize.w, anim.frameSize.h);
     }
   }
 
@@ -339,10 +331,17 @@ const updateSprites = () => {
 const completeAnimation = (anim) => {
   anim.completed = true;
   if (!anim.loop) {
+    if (animQueue.length > 0) {
+      changeAnimation();
+    }
     requestAnimationFrame(updateSprites);
     return;
   } 
   anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
+
+  if (animQueue.length > 0) {
+    changeAnimation();
+  }
 };
 
 // Adds animations from an action to the animation queue
@@ -353,17 +352,21 @@ const addAnimations = (anims, action) => {
     let addAnim = activeCharacter.animations[a.animation];
     console.dir(`characters/${activeCharacter.name.toLowerCase()}/${a.animation}.png`);
     console.dir(addAnim.frameSize);
+    console.dir(addAnim);
+    console.dir(a);
     animQueue.push({
       "source": getImage(a.animation),
       "frameSize": addAnim.frameSize,
       "frames": addAnim.frames,
       "fps": addAnim.fps,
       "fpsTime": 1000 / addAnim.fps,
+      "padding": addAnim.padding || 0,
       "frameTime": 0,
       "currentFrame": 0,
       "action": action,
       "x": addAnim.offset ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
       "y": addAnim.offset ? canvas.height - canvasPadding - addAnim.frameSize.h + addAnim.offset.y : canvas.height - canvasPadding - addAnim.frameSize.h,
+      "interruptable": addAnim.interruptable,
       "loop": a.loop,
       "reverse": a.reverse
     });
@@ -376,6 +379,17 @@ const removeAnimations = (action) => {
  animQueue = animQueue.filter(anim => {
   return anim.action != action;
  });
+};
+
+const changeAnimation = () => {
+  // Get our new animation
+  console.dir('changing animation');
+  anim = animQueue.shift();
+
+  // Set the currentFrame to be the starting frame
+  // 0 if playing normally, last frame if playing in reverse
+  anim.currentFrame = anim.reverse ? anim.frames - 1 : 0;
+  console.dir(anim);
 };
 
 // Switches the active character
