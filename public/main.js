@@ -4,6 +4,7 @@ let prevTimerState;
 let runReset = false;
 let comparison;
 let timingMethod;
+let livesplitPort;
 
 let characters;
 let activeCharacter;
@@ -25,7 +26,7 @@ let characterImages = [];
 
 // Open a WebSocket that works with LiveSplit
 const startSplitsSocket = () => {
-  splitsSocket = new WebSocket('ws://localhost:15721');
+  splitsSocket = new WebSocket(`ws://localhost:${livesplitPort}`);
   splitsSocket.onopen = (event) => {
     console.dir('Connected to LiveSplit');
     console.dir(event);
@@ -510,7 +511,12 @@ window.onload = () => {
   initCharacters();
 
   // Attempt to connect to LiveSplit
-  startSplitsSocket();
+  fetch('/livesplitPort')
+  .then(res => res.json())
+  .then(lsPort => { 
+    livesplitPort = lsPort;
+    startSplitsSocket();
+  });
 
   // Start updating sprites
   lastUpdate = Date.now();

@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const server = require('http').createServer(app);
 const port = require('./config.json').port || process.env.PORT || process.env.NODE_PORT || 3000;
+const livesplitPort = require('./config.json').livesplitPort || 15721;
 const fs = require('fs');
 
 const {
@@ -81,7 +82,11 @@ app.get('/canvas', (req, res) => {
     canvasSize,
     canvasPadding
   });
-})
+});
+
+app.get('/livesplitPort', (req, res) => {
+  res.json(livesplitPort);
+});
 
 server.listen(port, () => {
   console.log(`Listening on ${port}`);
