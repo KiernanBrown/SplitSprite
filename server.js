@@ -56,6 +56,10 @@ const loadFiles = (dirName, fileArr, subFolder) => {
 }
 
 app.use(express.static("public"));
+app.use(express.static(__dirname + '/node_modules/jquery/dist'));
+app.use(express.static(__dirname + '/node_modules/@fortawesome/fontawesome-free'))
+app.use(express.static(__dirname + '/node_modules/bootstrap/dist'));
+
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + "/views/index.html");

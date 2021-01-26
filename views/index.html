@@ -3,10 +3,20 @@
 <head>
   <title>SplitSprite</title>
   <meta charset="utf-8"/>
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/all.min.css">
 </head>
 <body>
-  <h1>SplitSprite Page</h1>
+  <h1>SplitSprite</h1>
+
+  <button type="button" id="livesplitButton" class="btn icon-btn btn-danger" data-toggle="tooltip" data-placement="top" title="Click to Reconnect">
+    <span id="livesplitButtonContent" class="icon"><i class="fas fa-exclamation-circle"></i> LiveSplit - Not Connected</span>
+  </button>
+
   <div id="content"></div>
   <canvas id="spriteCanvas" width="140" height="120"></canvas>
+  <script src="jquery.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
   <script src="main.js"></script>
 </body>

@@ -31,11 +31,7 @@ const startSplitsSocket = () => {
     console.dir(event);
 
     // Update page
-    let connectText = document.createElement('h2');
-    connectText.textContent = `Connected to LiveSplit!`;
-    document.getElementById('content').appendChild(connectText);
-
-    initCharacters();
+    updateLivesplitButton(true);
   };
 
   splitsSocket.onmessage = (event) => {
@@ -108,7 +104,6 @@ const startSplitsSocket = () => {
     } else if (action === 'split') {
       // A split has occurred
       // Get information on the split
-      console.dir(data);
       const split = data.state.run.segments[data.state.currentSplitIndex - 1];
       const prevSplit = data.state.currentSplitIndex > 1 ? data.state.run.segments[data.state.currentSplitIndex - 2] : undefined;
 
@@ -158,6 +153,7 @@ const startSplitsSocket = () => {
     // Attempt to reconnect if the socket is closed
     splitsSocket.onclose = (e) => {
       console.dir('Socket closed');
+      updateLivesplitButton(false);
       setTimeout(() => {
         console.dir('Reconnecting');
         startSplitsSocket();
@@ -173,12 +169,8 @@ const startSplitsSocket = () => {
 
 // Handles animations given the current and previous split
 const handleSplit = (split, prevSplit, splitting, overriding) => {
-  console.dir(split);
-  console.dir(prevSplit);
-
   const splitTime = split.splitTime[timingMethod];
   const comparisonTime = split.comparisons[comparison][timingMethod];
-  console.dir(comparisonTime);
 
   // First check split duration to see if time was saved or lost
   // This only happens if the runner just split (not on comparison switch)
@@ -194,12 +186,9 @@ const handleSplit = (split, prevSplit, splitting, overriding) => {
     // Get the duration of the current split and comparison
     let splitDuration = splitTime - prevSplitTime;
     let comparisonDuration = comparisonTime - prevComparisonTime;
-    console.dir(splitDuration);
-    console.dir(comparisonDuration);
 
     // Check if we saved or lost time
     if (!overriding) {
-      console.dir(split.bestSegment[timingMethod]);
       if (!split.bestSegment[timingMethod] || splitDuration <= split.bestSegment[timingMethod]) {
         // Gold Split
         addAnimations(activeCharacter.actions.split_gold, 'split_gold');
@@ -390,9 +379,6 @@ const removeAnimations = (action) => {
 const switchCharacter = (charSwitch) => {
   if (!charSwitch.hasOwnProperty('conditionalCharacters') || charSwitch.conditionalCharacters.includes(activeCharacter.name)) {
     if (charSwitch.switchOut) {
-      console.dir('Switching Out!');
-      console.dir(activeCharacter.actions);
-      console.dir(charSwitch.switchOut);
       addAnimations(activeCharacter.actions[charSwitch.switchOut], "switch");
     }
     switch (charSwitch.switchCharacter.toLowerCase()) {
@@ -409,8 +395,6 @@ const switchCharacter = (charSwitch) => {
     }
 
     if (charSwitch.switchIn) {
-      console.dir('Switching In!');
-      console.dir(activeCharacter.actions);
       addAnimations(activeCharacter.actions[charSwitch.switchIn], "switch");
     }
   }
@@ -430,6 +414,7 @@ const initCanvas = () => {
   });
 };
 
+//Initializes the runs array with runs from the server
 const initRuns = () => {
   fetch('/runs')
   .then(res => res.json())
@@ -442,6 +427,7 @@ const initRuns = () => {
   });
 };
 
+// Sets the activeRun to the run specified
 const setRun = (name) => {
   let filteredRuns = runs.filter(r => {
     return r.name.toLowerCase() === name.toLowerCase();
@@ -453,23 +439,21 @@ const setRun = (name) => {
   }
 };
 
+// Filters characterSwitches based on the criteria passed in
+// Returns an array of characterSwitches that match the criteria
 const filterSwitches = (criteria) => {
   let validSwitches = activeRun.characterSwitches;
-  console.dir(validSwitches);
 
   if (criteria.action) {
     validSwitches = validSwitches.filter(charSwitch => {
       return charSwitch.action === criteria.action;
     });
-    console.dir(validSwitches);
   }
 
-  console.dir(criteria.splitIndex);
   if (criteria.hasOwnProperty('splitName') && criteria.hasOwnProperty('splitIndex')) {
     validSwitches = validSwitches.filter(charSwitch => {
       return charSwitch.splitName.toLowerCase() === criteria.splitName.toLowerCase() || charSwitch.splitIndex === criteria.splitIndex;
     });
-    console.dir(validSwitches);
   }
 
   validSwitches = validSwitches.filter(charSwitch => {
@@ -479,18 +463,56 @@ const filterSwitches = (criteria) => {
       return true;
     }
   });
-  console.dir(validSwitches);
   
   return validSwitches;
 };
 
-// Connect to LiveSplit when the window loads
+// Function to update livesplitButton when we connect/disconnect with LiveSplit
+const updateLivesplitButton = (connected) => {
+  if (connected) {
+    // Disabled green button showing connected status
+    let lsButton = document.getElementById('livesplitButton');
+    lsButton.classList.remove('btn-danger');
+    lsButton.classList.add('btn-success');
+    lsButton.setAttribute('disabled', true);
+
+    let lsButtonContent = document.getElementById('livesplitButtonContent');
+    lsButtonContent.innerHTML = '<span id="livesplitButtonContent" class="icon"><i class="fas fa-check-circle"></i> LiveSplit - Connected</span>';
+  } else {
+    // Red button showing disconnected status
+    let lsButton = document.getElementById('livesplitButton');
+    lsButton.classList.remove('btn-success');
+    lsButton.classList.add('btn-danger');
+    lsButton.removeAttribute('disabled');
+
+    let lsButtonContent = document.getElementById('livesplitButtonContent');
+    lsButtonContent.innerHTML = '<span id="livesplitButtonContent" class="icon"><i class="fas fa-exclamation-circle"></i> LiveSplit - Not Connected</span>';
+  }
+};
+
 window.onload = () => {
+  // Click listener for livesplitButton
+  // Attempts to reconnect if not connected to LiveSplit when clicked
+  let lsButton = document.getElementById('livesplitButton').addEventListener('click', () => {
+    if (splitsSocket.readyState === WebSocket.CLOSED) {
+      console.dir('Attempting reconnect');
+      startSplitsSocket();
+    } 
+  });
 
+  // Initialize tooltips
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+
+  // Initialize Canvas and Characters
   initCanvas();
+  initCharacters();
 
+  // Attempt to connect to LiveSplit
   startSplitsSocket();
-  lastUpdate = Date.now();
 
+  // Start updating sprites
+  lastUpdate = Date.now();
   requestAnimationFrame(updateSprites);
 };

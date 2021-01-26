@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/KiernanBrown/SplitSprite#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "@fortawesome/fontawesome-free": "^5.15.2",
+    "@popperjs/core": "^2.6.0",
+    "bootstrap": "^4.6.0",
+    "express": "^4.17.1",
+    "jquery": "^3.5.1"
   }
 }
