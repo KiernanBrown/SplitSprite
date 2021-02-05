@@ -354,6 +354,7 @@ const addAnimations = (anims, action) => {
     console.dir(addAnim.frameSize);
     console.dir(addAnim);
     console.dir(a);
+    console.dir(addAnim.offsetY);
     animQueue.push({
       "source": getImage(a.animation),
       "frameSize": addAnim.frameSize,
@@ -364,8 +365,8 @@ const addAnimations = (anims, action) => {
       "frameTime": 0,
       "currentFrame": 0,
       "action": action,
-      "x": addAnim.offset ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
-      "y": addAnim.offset ? canvas.height - canvasPadding - addAnim.frameSize.h + addAnim.offset.y : canvas.height - canvasPadding - addAnim.frameSize.h,
+      "x": a.offsetX ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + a.offsetX : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
+      "y": a.offsetY ? canvas.height - canvasPadding - addAnim.frameSize.h + a.offsetY : canvas.height - canvasPadding - addAnim.frameSize.h,
       "interruptable": addAnim.interruptable,
       "loop": a.loop,
       "reverse": a.reverse
