@@ -16,7 +16,7 @@ let currentSwitch;
 let dt = 0;
 let lastUpdate;
 let animQueue = [];
-let anim = { "interruptable": true, "completed": true };
+let anim = { "interruptible": true, "completed": true };
 let canvas;
 let ctx;
 
@@ -290,7 +290,7 @@ const updateSprites = () => {
   dt = Date.now() - lastUpdate; 
   lastUpdate = Date.now();
 
-  if (anim.completed && animQueue.length > 0 && anim.interruptable) {
+  if (anim.completed && animQueue.length > 0 && anim.interruptible) {
     console.dir('first change anim');
     changeAnimation();
   }
@@ -365,9 +365,9 @@ const addAnimations = (anims, action) => {
       "frameTime": 0,
       "currentFrame": 0,
       "action": action,
-      "x": a.offsetX ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + a.offsetX : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
-      "y": a.offsetY ? canvas.height - canvasPadding - addAnim.frameSize.h + a.offsetY : canvas.height - canvasPadding - addAnim.frameSize.h,
-      "interruptable": addAnim.interruptable,
+      "x": addAnim.hasOwnProperty("offset") && addAnim.offset.x ? (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2) + addAnim.offset.x : (canvas.width / 2) - Math.floor(addAnim.frameSize.w / 2),
+      "y": addAnim.hasOwnProperty("offset") && addAnim.offset.y ? canvas.height - canvasPadding - addAnim.frameSize.h + addAnim.offset.y : canvas.height - canvasPadding - addAnim.frameSize.h,
+      "interruptible": addAnim.interruptible,
       "loop": a.loop,
       "reverse": a.reverse
     });

@@ -8,7 +8,7 @@
       },
       "frames": 6,
       "fps": 8,
-      "interruptable": true
+      "interruptible": true
     },
     "dodge": {
       "frameSize": {
@@ -104,8 +104,7 @@
         "h": 88
       },
       "offset": {
-        "x": 2,
-        "y": 0
+        "x": 2
       },
       "frames": 2,
       "fps": 11
@@ -132,8 +131,7 @@
         "h": 87
       },
       "offset": {
-        "x": 23,
-        "y": 0
+        "x": 23
       },
       "frames": 9,
       "fps": 8
