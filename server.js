@@ -1,38 +1,41 @@
 const express = require("express");
 const app = express();
 const server = require('http').createServer(app);
-const port = require('./config.json').port || process.env.PORT || process.env.NODE_PORT || 3000;
-const livesplitPort = require('./config.json').livesplitPort || 15721;
 const fs = require('fs');
-
-const {
-  canvasSize,
-  canvasPadding,
-  defaultRun
-} = require('./config.json');
+const port = process.env.PORT || process.env.NODE_PORT || 15119;
+let livesplitPort = 15721;
+let canvasSize = {
+  "w": 100,
+  "h": 100
+};
+let canvasPadding = 0;
+let defaultRun = "KH3";
 
 let characters = [];
 let runs = [];
 
-const loadCharacters = () => {
-  const dirName = 'public/characters/';
-  fs.readdir(dirName, (err, filenames) => {
+const loadConfig = () => {
+  fs.readFile('./config.json', (err, content) => {
     if (err) {
       console.dir(err);
       return;
     }
-
-    filenames.forEach((file) => {
-      fs.readFile(dirName + file + `/${file}.json`, (err, content) => {
-        if (err) {
-          console.dir(err);
-          return;
-        }
-        // Parse the JSON file and add it to the characters array
-        characters.push(JSON.parse(content));
-      });
-    });
-  });
+    
+    // Get the properties from the config file
+    let configJSON = JSON.parse(content);
+    if (configJSON.hasOwnProperty('livesplitPort')) {
+      livesplitPort = configJSON.livesplitPort;
+    }
+    if (configJSON.hasOwnProperty('canvasSize')) {
+      canvasSize = configJSON.canvasSize;
+    }
+    if (configJSON.hasOwnProperty('canvasPadding')) {
+      canvasPadding = configJSON.canvasPadding;
+    }
+    if (configJSON.hasOwnProperty('defaultRun')) {
+      defaultRun = configJSON.defaultRun;
+    }
+  })
 };
 
 const loadFiles = (dirName, fileArr, subFolder) => {
@@ -88,8 +91,9 @@ app.get('/livesplitPort', (req, res) => {
   res.json(livesplitPort);
 });
 
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Listening on ${port}`);
+  loadConfig();
   loadFiles('public/characters/', characters, true);
   loadFiles('public/runs/', runs);
 });
