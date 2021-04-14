@@ -2,8 +2,6 @@ let splitsSocket;
 let timerState;
 let prevTimerState;
 let runReset = false;
-let comparison;
-let timingMethod;
 let livesplitPort;
 
 let characters;
@@ -52,64 +50,13 @@ const startSplitsSocket = () => {
     timerState = data.state.timerState;
 
     if (action === 'reset') { 
-      // A run has been reset
-      console.dir(prevTimerState);     
-      // Run was reset before finishing
-      if(prevTimerState === 'Running') {
-        let charSwitches = filterSwitches({
-          action: 'reset'
-        });
-        currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
-  
-        // Override the default animations if needed
-        if(!currentSwitch|| !currentSwitch.override) {
-          addAnimations(activeCharacter.actions.reset, 'reset');
-        }
 
-        if (currentSwitch) {
-          switchCharacter(currentSwitch);
-        }
+    } else if (action === 'start') {
 
-        runReset = true;
-      }
-
-      // Run was finished
-      if (prevTimerState === 'Ended') {
-        addAnimations(activeCharacter.actions.default, 'default');
-        runReset = false;
-      }
-    }
-    else if (action === 'start') {
-      // A run has started
-      // Get any character switches for starting the run
-      let charSwitches = filterSwitches({
-        action: 'start'
-      });
-      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
-
-      // Override the default animations if needed
-      if(!currentSwitch|| !currentSwitch.override) {
-        // Give extra animations if this is a run after a failed run
-        if (runReset) {
-          addAnimations(activeCharacter.actions.retry, 'retry');
-        }
-        addAnimations(activeCharacter.actions.ahead, 'ahead');
-      }
-
-      // Switch characters if needed
-      if (currentSwitch) {
-        switchCharacter(currentSwitch);
-      }
-
-      // Set comparison and timingMethod
-      console.dir(data);
-      comparison = data.state.currentComparison;
-      timingMethod = data.state.currentTimingMethod === 'RealTime' ? 'realTime' : 'gameTime';
     } else if (action === 'split') {
 
     } else if (action === 'switch-comparison') {
       // Update the current comparison
-      comparison = data.state.currentComparison;
 
       // Get information about the current split with the new comparison
       // This information only exists if the runner has split this run
@@ -468,37 +415,83 @@ window.onload = () => {
     updateLivesplitButton(lsConnected);
   });
 
+  socket.on('reset', () => {
+    // A run has been reset
+    // Get any character switches for resetting the run
+    let charSwitches = filterSwitches({
+      action: 'reset'
+    });
+    currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+      
+    // Override the default animations if needed
+    if(!currentSwitch|| !currentSwitch.override) {
+      addAnimations(activeCharacter.actions.reset, 'reset');
+    }
+    
+    // Switch character if needed
+    if (currentSwitch) {
+      switchCharacter(currentSwitch);
+    }
+    
+    // Update runReset (used for animations)
+    runReset = true;
+  });
+
+  socket.on('start', () => {
+    // A run has started
+    // Get any character switches for starting the run
+    let charSwitches = filterSwitches({
+      action: 'start'
+    });
+    currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+
+    // Override the default animations if needed
+    if(!currentSwitch|| !currentSwitch.override) {
+      // Give extra animations if this is a run after a failed run
+      if (runReset) {
+        addAnimations(activeCharacter.actions.retry, 'retry');
+      }
+      addAnimations(activeCharacter.actions.ahead, 'ahead');
+    }
+
+    // Switch characters if needed
+    if (currentSwitch) {
+      switchCharacter(currentSwitch);
+    }
+  });
+
   socket.on('split', (split) => {
-      // A split has occurred
-      // Get information on the split
-      // Get any character switches for this split
-      let charSwitches = filterSwitches({
-        action: 'split',
-        splitName: split.name,
-        splitIndex: split.index
-      });
-      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+    // A split has occurred
+    // Get information on the split
+    // Get any character switches for this split
+    let charSwitches = filterSwitches({
+      action: 'split',
+      splitName: split.name,
+      splitIndex: split.index
+    });
+    currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
 
-      // Override the default animations if needed
-      if(!currentSwitch|| !currentSwitch.override) {
-        // If timerState === 'Ended', run was finished
-        if (timerState === 'Ended') {
-          addAnimations(activeCharacter.actions.finish, 'finish');
-        } else {
-          handleSplit(split, true);
-        }
-      }
+    // Override the default animations if needed
+    if(!currentSwitch|| !currentSwitch.override) {
+      handleSplit(split, true);
+    }
 
-      // Switch characters if needed
-      if (currentSwitch) {
-        switchCharacter(currentSwitch);
-        handleSplit(split, true, true);
-      }
+    // Switch characters if needed
+    if (currentSwitch) {
+      switchCharacter(currentSwitch);
+      handleSplit(split, true, true);
+    }
+  });
+
+  socket.on('end', () => {
+    // Run has ended
+    addAnimations(activeCharacter.actions.finish, 'finish');
+    runReset = false;
   });
 
   // Click listener for livesplitButton
   // Attempts to reconnect if not connected to LiveSplit when clicked
-  let lsButton = document.getElementById('livesplitButton').addEventListener('click', () => {
+  document.getElementById('livesplitButton').addEventListener('click', () => {
     if (!lsConnected) {
       console.dir('Connecting to LS');
       socket.emit('lsConnect');
@@ -513,14 +506,6 @@ window.onload = () => {
   // Initialize Canvas and Characters
   initCanvas();
   initCharacters();
-
-  // Attempt to connect to LiveSplit
-  /*fetch('/livesplitPort')
-  .then(res => res.json())
-  .then(lsPort => { 
-    livesplitPort = lsPort;
-    //startSplitsSocket();
-  });*/
 
   // Start updating sprites
   lastUpdate = Date.now();

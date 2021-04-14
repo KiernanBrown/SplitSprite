@@ -14,4 +14,5 @@ This project supports using JSON files for Runs and Characters, and allows for u
 
 ## Required Programs <a name="programs"></a>
 As mentioned above, SpriteSplit works with the timer software LiveSplit. The newest version of LiveSplit can be downloaded here: [LiveSplit Downloads Page](https://livesplit.org/downloads/)
+
 This project also requires the LiveSplit Server component in order to read information from LiveSplit. The download and setup information for this component can be found here: [https://github.com/LiveSplit/LiveSplit.Server](https://github.com/LiveSplit/LiveSplit.Server) If you are using the latest development build of LiveSplit then it should already have this component included.
