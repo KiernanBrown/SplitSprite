@@ -24,6 +24,9 @@ let canvasPadding = 0;
 
 let characterImages = [];
 
+let socket;
+let lsConnected = false;
+
 // Open a WebSocket that works with LiveSplit
 const startSplitsSocket = () => {
   splitsSocket = new WebSocket(`ws://localhost:${livesplitPort}`);
@@ -103,34 +106,7 @@ const startSplitsSocket = () => {
       comparison = data.state.currentComparison;
       timingMethod = data.state.currentTimingMethod === 'RealTime' ? 'realTime' : 'gameTime';
     } else if (action === 'split') {
-      // A split has occurred
-      // Get information on the split
-      const split = data.state.run.segments[data.state.currentSplitIndex - 1];
-      const prevSplit = data.state.currentSplitIndex > 1 ? data.state.run.segments[data.state.currentSplitIndex - 2] : undefined;
 
-      // Get any character switches for this split
-      let charSwitches = filterSwitches({
-        action: 'split',
-        splitName: split.name,
-        splitIndex: data.state.currentSplitIndex - 1
-      });
-      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
-
-      // Override the default animations if needed
-      if(!currentSwitch|| !currentSwitch.override) {
-        // If timerState === 'Ended', run was finished
-        if (timerState === 'Ended') {
-          addAnimations(activeCharacter.actions.finish, 'finish');
-        } else {
-          handleSplit(split, prevSplit, true);
-        }
-      }
-
-      // Switch characters if needed
-      if (currentSwitch) {
-        switchCharacter(currentSwitch);
-        handleSplit(split, prevSplit, true, true);
-      }
     } else if (action === 'switch-comparison') {
       // Update the current comparison
       comparison = data.state.currentComparison;
@@ -151,16 +127,6 @@ const startSplitsSocket = () => {
       }
     } 
 
-    // Attempt to reconnect if the socket is closed
-    splitsSocket.onclose = (e) => {
-      console.dir('Socket closed');
-      updateLivesplitButton(false);
-      setTimeout(() => {
-        console.dir('Reconnecting');
-        startSplitsSocket();
-      }, 1000);
-    };
-
     splitsSocket.onerror = (error) => {
       console.dir(error);
     };
@@ -169,31 +135,16 @@ const startSplitsSocket = () => {
 };
 
 // Handles animations given the current and previous split
-const handleSplit = (split, prevSplit, splitting, overriding) => {
-  const splitTime = split.splitTime[timingMethod];
-  const comparisonTime = split.comparisons[comparison][timingMethod];
-
+const handleSplit = (split, splitting, overriding) => {
   // First check split duration to see if time was saved or lost
   // This only happens if the runner just split (not on comparison switch)
   if (splitting) {
-    // Get the splitTime of the previous split (if it exists)
-    let prevSplitTime = 0;
-    let prevComparisonTime = 0;
-    if (prevSplit) {
-      prevSplitTime = prevSplit.splitTime[timingMethod];
-      prevComparisonTime = prevSplit.comparisons[comparison][timingMethod];
-    }
-
-    // Get the duration of the current split and comparison
-    let splitDuration = splitTime - prevSplitTime;
-    let comparisonDuration = comparisonTime - prevComparisonTime;
-
     // Check if we saved or lost time
     if (!overriding) {
-      if (!split.bestSegment[timingMethod] || splitDuration <= split.bestSegment[timingMethod]) {
+      if (split.gold) {
         // Gold Split
         addAnimations(activeCharacter.actions.split_gold, 'split_gold');
-      } else if (splitDuration <= comparisonDuration || comparisonDuration <= 0) {
+      } else if (split.timeSave) {
         // Split that saved time
         addAnimations(activeCharacter.actions.split_timesave, 'split_timesave');
       } else {
@@ -204,7 +155,7 @@ const handleSplit = (split, prevSplit, splitting, overriding) => {
   }
 
   // Then check if we're ahead or behind
-  if (splitTime <= comparisonTime || comparisonTime <= 0) {
+  if (split.ahead) {
     addAnimations(activeCharacter.actions.ahead, 'ahead');
   } else {
     addAnimations(activeCharacter.actions.behind, 'behind');
@@ -509,13 +460,49 @@ const updateLivesplitButton = (connected) => {
 };
 
 window.onload = () => {
+  socket = io.connect();
+  socket.emit('lsConnect');
+
+  socket.on('lsConnect', (connected) => {
+    lsConnected = connected;
+    updateLivesplitButton(lsConnected);
+  });
+
+  socket.on('split', (split) => {
+      // A split has occurred
+      // Get information on the split
+      // Get any character switches for this split
+      let charSwitches = filterSwitches({
+        action: 'split',
+        splitName: split.name,
+        splitIndex: split.index
+      });
+      currentSwitch = charSwitches.length > 0 ? charSwitches[0] : undefined;
+
+      // Override the default animations if needed
+      if(!currentSwitch|| !currentSwitch.override) {
+        // If timerState === 'Ended', run was finished
+        if (timerState === 'Ended') {
+          addAnimations(activeCharacter.actions.finish, 'finish');
+        } else {
+          handleSplit(split, true);
+        }
+      }
+
+      // Switch characters if needed
+      if (currentSwitch) {
+        switchCharacter(currentSwitch);
+        handleSplit(split, true, true);
+      }
+  });
+
   // Click listener for livesplitButton
   // Attempts to reconnect if not connected to LiveSplit when clicked
   let lsButton = document.getElementById('livesplitButton').addEventListener('click', () => {
-    if (splitsSocket.readyState === WebSocket.CLOSED) {
-      console.dir('Attempting reconnect');
-      startSplitsSocket();
-    } 
+    if (!lsConnected) {
+      console.dir('Connecting to LS');
+      socket.emit('lsConnect');
+    }
   });
 
   // Initialize tooltips
@@ -528,12 +515,12 @@ window.onload = () => {
   initCharacters();
 
   // Attempt to connect to LiveSplit
-  fetch('/livesplitPort')
+  /*fetch('/livesplitPort')
   .then(res => res.json())
   .then(lsPort => { 
     livesplitPort = lsPort;
-    startSplitsSocket();
-  });
+    //startSplitsSocket();
+  });*/
 
   // Start updating sprites
   lastUpdate = Date.now();
